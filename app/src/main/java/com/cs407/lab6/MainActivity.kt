@@ -26,7 +26,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private val mDestinationLatLng = LatLng(43.0753, -89.4034) // Bascom Hall
     private lateinit var locationCallback: LocationCallback
     private val LOCATION_PERMISSION_REQUEST_CODE = 1
-
     private var isFirstLocationUpdate = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
