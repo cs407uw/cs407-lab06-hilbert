@@ -7,7 +7,6 @@ plugins {
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
-// 加载 local.properties 文件
 val localProperties = Properties()
 val localFile = rootProject.file("local.properties")
 if (localFile.exists()) {
@@ -27,7 +26,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // 从 local.properties 中读取 MAPS_API_KEY
         val mapsApiKey = localProperties["MAP_API_KEY"] ?: "\"YOUR_DEFAULT_API_KEY\""
         buildConfigField("String", "MAP_API_KEY", "\"$mapsApiKey\"")
     }
@@ -62,6 +60,7 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
