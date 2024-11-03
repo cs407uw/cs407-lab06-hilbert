@@ -23,11 +23,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private lateinit var mFusedLocationProviderClient: FusedLocationProviderClient
-    private lateinit var locationCallback: LocationCallback
     private val mDestinationLatLng = LatLng(43.0753, -89.4034) // Bascom Hall
+    private lateinit var locationCallback: LocationCallback
     private val LOCATION_PERMISSION_REQUEST_CODE = 1
 
-    // Flag to track if it's the first location update
     private var isFirstLocationUpdate = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,9 +50,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     setLocationMarker(currentLatLng, "Current Location")
                     drawPolyline(currentLatLng, mDestinationLatLng)
 
-                    // Move camera only on the first update
                     if (isFirstLocationUpdate) {
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 10f))
                         isFirstLocationUpdate = false
                     }
                 }
@@ -61,16 +59,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
-        setLocationMarker(mDestinationLatLng, "Bascom Hall")
-        checkLocationPermissionAndRequestUpdates()
-    }
-
-    private fun checkLocationPermissionAndRequestUpdates() {
+    private fun checkLocationPermissionAndDrawPolyline() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            requestLocationUpdates()
+            // Permission granted, get current location and draw polyline
+            getUserLocationAndDrawPolyline()
         } else {
+            // Request permission
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
@@ -79,10 +73,24 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    override fun onMapReady(googleMap: GoogleMap) {
+        mMap = googleMap
+        setLocationMarker(mDestinationLatLng, "Bascom Hall")
+        checkLocationPermissionAndDrawPolyline()
+    }
+
     @SuppressLint("MissingPermission")
-    private fun requestLocationUpdates() {
-        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000).build()
-        mFusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, mainLooper)
+    private fun getUserLocationAndDrawPolyline() {
+        mFusedLocationProviderClient.lastLocation.addOnSuccessListener { location ->
+            if (location != null) {
+                val currentLatLng = LatLng(location.latitude, location.longitude)
+                setLocationMarker(currentLatLng, "Current Location")
+                drawPolyline(currentLatLng, mDestinationLatLng)
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
+            } else {
+                Toast.makeText(this, "Unable to get current location", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun drawPolyline(start: LatLng, end: LatLng) {
@@ -106,7 +114,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                requestLocationUpdates()
+                getUserLocationAndDrawPolyline()
             } else {
                 Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show()
             }
